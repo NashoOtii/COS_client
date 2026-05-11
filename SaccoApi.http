@@ -1,0 +1,6 @@
+@SaccoApi_HostAddress = http://localhost:5204
+
+GET {{SaccoApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,38 @@
+import { createContext, useContext, useState, useEffect } from 'react'
+
+const AuthContext = createContext(null)
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Restore session on page refresh
+    const stored = localStorage.getItem('user')
+    if (stored) setUser(JSON.parse(stored))
+    setLoading(false)
+  }, [])
+
+  const login = (userData, token) => {
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(userData))
+    setUser(userData)
+  }
+
+  const logout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+  }
+
+  const isExecutive = user?.role &&
+    ['Treasurer', 'Secretary', 'Chairperson'].includes(user.role)
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, isExecutive, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export const useAuth = () => useContext(AuthContext)

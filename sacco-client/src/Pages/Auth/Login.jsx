@@ -1,0 +1,115 @@
+import { useState } from 'react'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import api from '../../api/axios'
+
+export default function Login() {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const successMessage = location.state?.message
+
+  const [form, setForm] = useState({ phoneNumber: '', password: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const { data } = await api.post('/auth/login', form)
+      login({
+        memberId: data.memberId,
+        fullName: data.fullName,
+        role: data.role,
+      }, data.token)
+      const isExecutive = ['Treasurer', 'Secretary', 'Chairperson']
+        .includes(data.role)
+      navigate(isExecutive ? '/executive' : '/member')
+    } catch (err) {
+      setError(err.response?.data || 'Invalid phone number or password.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center 
+      justify-center px-4">
+      <div className="w-full max-w-md">
+
+        {/* Logo / Title */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 
+            bg-blue-600 rounded-2xl mb-4 text-2xl">
+            🤝
+          </div>
+          <h1 className="text-3xl font-bold text-white">Circle of Support</h1>
+          <p className="text-slate-400 mt-2 text-sm">
+            Sign in to your account
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="card">
+          {successMessage && (
+            <div className="mb-5 p-3 bg-green-500/10 border border-green-500/30 
+              rounded-lg text-green-400 text-sm">
+              {successMessage}
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-5 p-3 bg-red-500/10 border border-red-500/30 
+              rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="label">Phone Number</label>
+              <input
+                type="tel"
+                placeholder="e.g. 0712345678"
+                value={form.phoneNumber}
+                onChange={e => setForm({ ...form, phoneNumber: e.target.value })}
+                className="input-field"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="label">Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
+                className="input-field"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full py-3 text-base"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          <p className="text-center text-slate-500 text-sm mt-6">
+            No account?{' '}
+            <Link to="/register"
+              className="text-blue-400 hover:text-blue-300 transition-colors">
+              Register here
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
