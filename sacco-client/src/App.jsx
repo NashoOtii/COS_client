@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
-import Login from './pages/auth/Login'
+import Login from './Pages/auth/Login'
 import Register from './Pages/auth/Register'
-import ExecutiveDashboard from './pages/executive/ExecutiveDashboard'
-import MemberDashboard from './pages/member/MemberDashboard'
+import ExecutiveDashboard from './Pages/executive/ExecutiveDashboard'
+import MemberDashboard from './Pages/member/MemberDashboard'
 import logoutIcon from './assets/icons8-logout-50.png';
 
 export default function App() {
