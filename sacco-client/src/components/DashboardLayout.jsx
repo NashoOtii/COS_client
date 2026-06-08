@@ -20,7 +20,7 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
 
-      {/* Sidebar */}
+      {/* Sidebar (Desktop only) */}
       <aside className={`
        flex flex-col bg-gray-900 text-white transition-all duration-300
        flex-shrink-0
@@ -83,27 +83,6 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
           </div>
         </div>
 
-      
-{/* Mobile Bottom Navigation - Text Only & Horizontally Scrollable */}
-<div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-  <div className="flex overflow-x-auto hide-scrollbar px-2 py-3 space-x-2">
-    {/* Use your memberTabs or tabs array here depending on the user role */}
-    {tabs.map((tab) => (
-      <button
-        key={tab.id}
-        onClick={() => setActiveTab(tab.id)}
-        className={`whitespace-nowrap px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
-          activeTab === tab.id
-            ? 'bg-blue-600 text-white shadow-md'
-            : 'text-slate-600 bg-slate-50 hover:bg-slate-100'
-        }`}
-      >
-        {tab.label}
-      </button>
-    ))}
-  </div>
-</div>
-
         {/* Cycle status */}
         {sidebarOpen && (
           <div className="px-4 py-3 border-b border-gray-700">
@@ -128,7 +107,7 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
           </div>
         )}
 
-        {/* Nav items */}
+        {/* Desktop Nav items */}
         <nav className="flex-1 py-4 overflow-y-auto">
           {tabs.map(tab => (
             <button
@@ -171,8 +150,8 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main content viewport wrapper */}
+      <div className="flex-1 flex flex-col overflow-hidden relative">
 
         {/* Top bar */}
         <header className="bg-white border-b border-gray-200 px-6 py-4 
@@ -199,10 +178,31 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
           </div>
         </header>
 
-        {/* Scrollable content */}
+        {/* Scrollable content section */}
         <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
+
+        {/* Mobile Bottom Navigation - Smooth Swipe & Icon Support */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+          <div className="flex overflow-x-auto px-3 py-2 space-x-3 scrollbar-none">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`flex flex-col items-center justify-center min-w-[72px] px-2 py-1.5 text-xs font-medium rounded-xl transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? 'bg-blue-600 text-white shadow-md scale-105'
+                    : 'text-slate-600 bg-slate-50 hover:bg-slate-100'
+                }`}
+              >
+                <span className="text-base mb-0.5">{tab.icon}</span>
+                <span className="text-[11px] tracking-tight">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   )
