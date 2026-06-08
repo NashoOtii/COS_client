@@ -120,17 +120,18 @@ export default function MemberDashboard() {
     >
 
       {/* ── OVERVIEW TAB ── */}
+      <div className="pd-20 md:pb-0"></div>
       {activeTab === 'overview' && (
         <div>
           {/* Welcome banner */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 
+          <div className="bg-gradient-to-r from-primary-700 to-primary-800 
             rounded-2xl p-6 mb-6 text-white shadow-lg">
-            <p className="text-blue-100 text-sm mb-1">Welcome back</p>
+            <p className="text-primary-100 text-sm mb-1">Welcome back</p>
             <h2 className="text-2xl font-bold">
-              {user?.fullName?.split(' ')[0]} 👋
+              {user?.fullName?.split(' ')[0] || 'Member'} 👋
             </h2>
-            {activeCycle && (
-              <p className="text-blue-100 text-sm mt-2">
+            {activeCycle ? (
+              <p className="text-primary-100 text-sm mt-2">
                 Active in <strong className="text-white">
                   {activeCycle.name}
                 </strong> — Weekly contribution:{' '}
@@ -138,24 +139,28 @@ export default function MemberDashboard() {
                   KES {activeCycle.weeklyContributionAmount?.toLocaleString()}
                 </strong>
               </p>
+            ) : (
+              <p className='text-primary text-sm mt-2'>No active cycle yet.</p>
             )}
           </div>
 
           {/* Personal stat cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 gap-3 mb-6">
             {[
               {
                 label: 'Total Contributed',
                 value: `KES ${totalContributed.toLocaleString()}`,
-              
-               color: 'text-green-600',
-                bg: 'bg-green-50', border: 'border-green-200'
+                bg: 'bg-emerald-50 hover:bg-emerald-100',
+                text: 'text-emerald-700', 
+                lbl: 'text-emerald-600'
+                
               },
               {
                 label: 'Payment Streak',
                 value: `${streak} week${streak !== 1 ? 's' : ''}`,
-                color: 'text-amber-600',
-                bg: 'bg-amber-50', border: 'border-amber-200'
+                bg: 'bg-amber-50 hover:bg-amber-100',
+                text: 'text-amber-700',
+                lbl: 'text-amber-600'
               },
               {
                 label: 'Active Loan',
@@ -163,13 +168,15 @@ export default function MemberDashboard() {
                   ? `KES ${activeLoan.totalRepayable?.toLocaleString()}`
                   : 'None',
                 color: activeLoan ? 'text-blue-600' : 'text-gray-400',
-                bg: 'bg-blue-50', border: 'border-blue-200'
+                bg: activeLoan ? 'bg-blue-50 hover:bg-blue-100' : 'bg-gray-50 hover:bg-gray-100',
+                lbl: activeLoan ? 'text-blue-600' : 'text-gray-400'
               },
               {
                 label: 'My Role',
-                value: user?.role,
-                color: 'text-purple-600',
-                bg: 'bg-purple-50', border: 'border-purple-200'
+                value: user?.role || user?.user?.role || '_',
+                bg: 'bg-purple-50 hover:bg-purple-100',
+                text: 'text-purple-700',
+                lbl: 'text-purple-600'
               },
             ].map(card => (
               <div key={card.label}
