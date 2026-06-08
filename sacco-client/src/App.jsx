@@ -7,6 +7,8 @@ import ExecutiveDashboard from './pages/executive/ExecutiveDashboard'
 import MemberDashboard from './pages/member/MemberDashboard'
 import logoutIcon from './assets/icons8-logout-50.png';
 
+//deploy trigger
+
 export default function App() {
   return (
     <AuthProvider>
