@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
   }
 
   const isExecutive = user?.role &&
-    ['Treasurer', 'Secretary', 'Chairperson'].includes(user.role)
+    ['Treasurer', 'Secretary', 'Chairperson'].includes(user.role.toLowerCase().trim())
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isExecutive, loading }}>

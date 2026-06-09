@@ -25,6 +25,7 @@ export default function Login() {
         fullName: data.fullName,
         role: data.role,
       }, data.token)
+      const userRole = data.role?.toLowerCase().trim() || '';
       const executiveRoles = ['Chairperson', 'Treasurer', 'Secretary']
       const isExecutive = executiveRoles.includes(data.role)
       navigate(isExecutive ? '/executive' : '/member')
@@ -93,13 +94,13 @@ export default function Login() {
                   placeholder="••••••••"
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
-                  className="input-field"
+                  className="input-field pr-20"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1
                     text-gray-400 hover:text-gray-600 transition-colors
                     bg-transparent border-none cursor-pointer p-1"
                 >
