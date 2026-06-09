@@ -7,8 +7,6 @@ const api = axios.create({
   },
 });
 
-export default api;
-
 // Attach token to every request automatically
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
@@ -31,4 +29,4 @@ api.interceptors.response.use(
   }
 )
 
-export default api
+export default api;
