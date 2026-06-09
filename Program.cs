@@ -77,7 +77,7 @@ builder.Services.AddControllers()
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("https://sacco-api-v6ux.onrender.com")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -102,11 +102,12 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider
         .GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = ["Member", "Treasurer", "Secretary", "Chairperson"];
+    string[] roles = new[] { "Member", "Treasurer", "Secretary", "Chairperson" };
     foreach (var role in roles)
     {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
+        // Use synchronous waits here since we're in the top-level sync context
+        if (!roleManager.RoleExistsAsync(role).GetAwaiter().GetResult())
+            roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
     }
 }
 
@@ -121,6 +122,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseRateLimiter();
