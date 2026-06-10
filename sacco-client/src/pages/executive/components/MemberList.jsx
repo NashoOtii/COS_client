@@ -30,19 +30,6 @@ export default function MemberList() {
     fetchData()
   }, [fetchData])
 
-  // 3. Fixed closing braces for approveMember
-  const approveMember = async (member) => {
-    try {
-      await api.patch(`/members/${member.id}/status`, 0, {
-        headers: { 'Content-Type': 'application/json' }
-      })
-      // Reuse our clean refetch function
-      await fetchData()
-    } catch (error) {
-      console.error("Error approving member:", error)
-    }
-  }
-
   // 4. toggleStatus is now correctly sitting at the component level
   const toggleStatus = async (member) => {
     try {

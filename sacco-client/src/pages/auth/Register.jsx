@@ -23,9 +23,14 @@ export default function Register() {
       setSuccess(true)
     } catch (err) {
       const data = err.response?.data
-      if (typeof data === 'string') setError(data)
-      else if (data?.errors) {
+      if (typeof data === 'string') {
+        setError(data)
+      } else if (data?.errors) {
         setError(Object.values(data.errors).flat().join(' '))
+      } else if (Array.isArray(data)) {
+        setError(data.map(e => e.description).join(' '))
+      } else if (data?.message) {
+        setError(data.message)
       } else {
         setError('Registration failed. Please try again.')
       }

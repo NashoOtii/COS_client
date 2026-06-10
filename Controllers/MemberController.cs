@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SaccoApi.Data;
@@ -11,10 +12,12 @@ namespace SaccoApi.Controllers
     public class MembersController : ControllerBase
     {
         private readonly SaccoDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public MembersController(SaccoDbContext context)
+        public MembersController(SaccoDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/members
@@ -63,6 +66,26 @@ public async Task<ActionResult<Member>> Create(CreateMemberDto dto)
     return CreatedAtAction(nameof(GetById), new { id = member.Id }, member);
 }
 
+
+// POST: api/members/5/reset-password
+[HttpPost("{id}/reset-password")]
+public async Task<IActionResult> ResetPassword(int id, 
+    [FromBody] string newPassword)
+{
+    var member = await _context.Members.FindAsync(id);
+    if (member == null) return NotFound();
+
+    var user = await _userManager.FindByIdAsync(member.ApplicationUserId!);
+    if (user == null) return NotFound();
+
+    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+    var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+    if (!result.Succeeded)
+        return BadRequest(result.Errors.Select(e => e.Description));
+
+    return Ok(new { Message = "Password reset successfully." });
+}
         // PUT: api/members/5
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Member member)
