@@ -15,10 +15,15 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition =
+            System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
 builder.Services.AddDbContext<SaccoDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration
+        .GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
@@ -59,27 +64,16 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("MemberOrAbove", policy =>
         policy.RequireRole("Member", "Treasurer", "Secretary", "Chairperson"));
 
-builder.Services.AddOpenApi();
-
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter());
-        // Handle circular references
-        options.JsonSerializerOptions.ReferenceHandler = 
-            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.DefaultIgnoreCondition = 
-            System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-    });
-
-    builder.Services.AddCors(options =>
+builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://sacco-api-v6ux.onrender.com" , "http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.WithOrigins(
+            "https://sacco-client.onrender.com",
+            "http://localhost:5173"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
 
@@ -89,25 +83,34 @@ builder.Services.AddRateLimiter(options =>
     {
         limiter.PermitLimit = 5;
         limiter.Window = TimeSpan.FromMinutes(1);
-        limiter.QueueProcessingOrder = 
-            System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        limiter.QueueProcessingOrder =
+            QueueProcessingOrder.OldestFirst;
         limiter.QueueLimit = 0;
     });
 });
 
+builder.Services.AddOpenApi();
+
 var app = builder.Build();
 
-// Seed roles on startup
+// Auto-migrate on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<SaccoDbContext>();
+    db.Database.Migrate();
+}
+
+// Seed roles
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider
         .GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = new[] { "Member", "Treasurer", "Secretary", "Chairperson" };
+    string[] roles = ["Member", "Treasurer", "Secretary", "Chairperson"];
     foreach (var role in roles)
     {
-        // Use synchronous waits here since we're in the top-level sync context
         if (!roleManager.RoleExistsAsync(role).GetAwaiter().GetResult())
-            roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
+            roleManager.CreateAsync(new IdentityRole(role))
+                .GetAwaiter().GetResult();
     }
 }
 
@@ -123,11 +126,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseCors("AllowFrontend");
+app.UseCors("AllowFrontend");     
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
-
 
 app.Run();
