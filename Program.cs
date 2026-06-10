@@ -94,6 +94,23 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// FORCE CORS TO LAYER ZERO
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Access-Control-Allow-Origin"] = "https://sacco-client.onrender.com";
+    context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
+    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.StatusCode = 200;
+        await context.Response.WriteAsync("OK");
+        return; // Stop processing and return 200 OK for preflight instantly
+    }
+
+    await next();
+});
+
 // Auto-migrate on startup
 using (var scope = app.Services.CreateScope())
 {
