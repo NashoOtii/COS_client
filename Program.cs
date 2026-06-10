@@ -73,8 +73,7 @@ builder.Services.AddCors(options =>
             "http://localhost:5173"
         )
         .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
+        .AllowAnyMethod();
     });
 });
 
