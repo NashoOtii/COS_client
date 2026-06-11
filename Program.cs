@@ -99,7 +99,7 @@ app.Use(async (context, next) =>
 {
     context.Response.Headers["Access-Control-Allow-Origin"] = "https://sacco-client.onrender.com";
     context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
-    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS";
 
     if (context.Request.Method == "OPTIONS")
     {
