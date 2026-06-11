@@ -131,7 +131,7 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
           ))}
         </nav>
 
-        {/* Logout */}
+        {/* Desktop Logout Button */}
         <div className="p-4 border-t border-gray-700">
           <button
             onClick={logout}
@@ -175,11 +175,19 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
                 </span>
               </div>
             )}
+            
+            {/* 🔑 PRECISE FIX: Responsive Quick Logout for Mobile views */}
+            <button 
+              onClick={logout}
+              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all"
+            >
+              <span>Logout</span>
+            </button>
           </div>
         </header>
 
         {/* Scrollable content section */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 pb-24 md:pb-6">
           {children}
         </main>
 
