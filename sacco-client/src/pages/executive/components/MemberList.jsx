@@ -30,48 +30,56 @@ export default function MemberList() {
     fetchData()
   }, [fetchData])
 
-  // 4. toggleStatus is now correctly sitting at the component level--password reset is also here
-      const toggleStatus = async (member) => {
-       try {
-      const newStatus = member.status === 'Active' ? 1 : 0
-       await api.patch(`/members/${member.id}/status`, newStatus, {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    
-     const handleResetPassword = async (member) => {
-    const newPassword = prompt(`Enter a new temporary password for ${member.fullName}:`)
-    
-    // If user clicks cancel or leaves it blank, do nothing
-    if (!newPassword || newPassword.trim() === '') return
-
-    if (newPassword.length < 6) {
-      alert("Password must be at least 6 characters long.")
-      return
-    }
-
-    try {
-      // Sending newPassword as a query parameter to match the [FromQuery] backend update
-      await api.post(`/members/${member.id}/reset-password?newPassword=${encodeURIComponent(newPassword)}`)
-      alert(`Password for ${member.fullName} has been updated successfully!`)
-    } catch (error) {
-      console.error("Error resetting password:", error)
-      const errorMsg = error.response?.data 
-        ? (Array.isArray(error.response.data) ? error.response.data.join(' ') : error.response.data)
-        : "Failed to reset password."
-      alert(`Error: ${errorMsg}`)
-    }
+  // 4. toggleStatus
+     const toggleStatus = async (member) => {
+  try {
+    const newStatusValue = member.status === 'Active' ? 1 : 0
+    await api.patch(`/members/${member.id}/status`, newStatusValue, {
+      headers: { 'Content-Type': 'application/json' }
+    })
+    setMembers(members.map(m =>
+      m.id === member.id
+        ? { ...m, status: member.status === 'Active' 
+            ? 'Inactive' : 'Active' }
+        : m
+    ))
+  } catch (error) {
+    console.error("Error toggling status:", error)
   }
-      
-      // Optimistically update the local state UI 
-      setMembers(members.map(m =>
-        m.id === member.id
-          ? { ...m, status: member.status === 'Active' ? 'Inactive' : 'Active' }
-          : m
-      ))
-    } catch (error) {
-      console.error("Error toggling status:", error)
-    }
+}
+
+// reset password
+const handleResetPassword = async (member) => {
+  const newPassword = prompt(
+    `Enter new temporary password for ${member.fullName}:`)
+  if (!newPassword || newPassword.trim() === '') return
+  if (newPassword.length < 6) {
+    alert('Password must be at least 6 characters.')
+    return
   }
+  try {
+    await api.post(
+      `/members/${member.id}/reset-password?newPassword=${
+        encodeURIComponent(newPassword)}`)
+    alert(`Password reset for ${member.fullName} successfully.`)
+  } catch (error) {
+    const msg = error.response?.data
+    alert(`Error: ${Array.isArray(msg) ? msg.join(' ') : msg 
+      || 'Reset failed.'}`)
+  }
+}
+
+const approveMember = async (member) => {
+  try {
+    await api.patch(`/members/${member.id}/status`, 0, {
+      headers: { 'Content-Type': 'application/json' }
+    })
+    setPending(pending.filter(m => m.id !== member.id))
+    await fetchData()
+  } catch (error) {
+    console.error("Error approving member:", error)
+  }
+}
 
   const roleColor = (role) => {
     const map = {
