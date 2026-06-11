@@ -27,8 +27,8 @@ export default function Login() {
       }, data.token)
       const userRole = data.role?.toLowerCase().trim() || '';
       const executiveRoles = ['Chairperson', 'Treasurer', 'Secretary']
-      const isExecutive = executiveRoles.includes(data.role)
-      navigate(isExecutive ? '/executive' : '/member')
+      const isExecutive = executiveRoles.includes(data.role) || data.role === 0;
+      navigate(isExecutive ? '/executive' : '/member', { replace: true })
     } catch (err) {
       setError('Invalid phone number or password.')
     } finally {

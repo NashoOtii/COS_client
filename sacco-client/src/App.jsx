@@ -7,7 +7,18 @@ import ExecutiveDashboard from './pages/executive/ExecutiveDashboard'
 import MemberDashboard from './pages/member/MemberDashboard'
 import logoutIcon from './assets/icons8-logout-50.png';
 
-//deploy trigger
+// FIX: Add the interceptor component outside of the App function
+function RootRedirect() {
+  const { user, loading } = useAuth();
+  
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  
+  const executiveRoles = ['Chairperson', 'Treasurer', 'Secretary'];
+  const isExecutive = executiveRoles.includes(user.role) || user.role === 0;
+  
+  return isExecutive ? <Navigate to="/executive" replace /> : <Navigate to="/member" replace />;
+}
 
 export default function App() {
   return (
@@ -33,7 +44,7 @@ export default function App() {
           } />
 
           {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

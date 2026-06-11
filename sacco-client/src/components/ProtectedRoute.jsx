@@ -13,8 +13,12 @@ export default function ProtectedRoute({ children, executiveOnly = false }) {
   )
 
   if (!user) return <Navigate to="/login" replace />
-  if (executiveOnly && !isExecutive) return <Navigate to="/member" replace />
-  if (!executiveOnly && isExecutive) return <Navigate to="/executive" replace />
+
+  const executiveRoles = ['Chairperson', 'Treasurer', 'Secretary'];
+  const isUserExecutive = executiveRoles.includes(user.role) || user.role === 0;
+
+  if (executiveOnly && !isUserExecutive) return <Navigate to="/member" replace />
+  if (!executiveOnly && isUserExecutive) return <Navigate to="/executive" replace />
   
   return children
 }
