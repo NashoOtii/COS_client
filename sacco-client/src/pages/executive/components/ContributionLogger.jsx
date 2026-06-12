@@ -8,34 +8,59 @@ export default function ContributionLogger({ activeCycle, onContributionLogged }
   const [members, setMembers] = useState([])
   const [contributions, setContributions] = useState([])
   const [weekNumber, setWeekNumber] = useState(1)
-  const [pageLoading, setPageLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(null) 
-  const [loading, setLoading] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true) // Tracks initial data load
+  const [submitting, setSubmitting] = useState(null)   // Tracks which button is saving
   const [message, setMessage] = useState('')
 
-  if (loading) return (
-  <div>
-    <div className="page-header">
-      <div className="h-7 bg-gray-200 rounded w-32 animate-pulse" />
-    </div>
-    <SkeletonTable rows={6} />
-  </div>
-)
-
   useEffect(() => {
-    api.get('/members').then(({ data }) =>
-      setMembers(data.filter(m => m.status === 'Active')))
-    if (activeCycle) {
-      api.get(`/contributions/cycle/${activeCycle.id}`)
-        .then(({ data }) => setContributions(data))
+    const fetchData = async () => {
+      try {
+        setPageLoading(true)
+        const membersRes = await api.get('/members')
+        setMembers(membersRes.data.filter(m => m.status === 'Active'))
+
+        if (activeCycle) {
+          const contributionsRes = await api.get(`/contributions/cycle/${activeCycle.id}`)
+          setContributions(contributionsRes.data)
+        }
+      } catch (err) {
+        console.error("Error fetching logger data:", err)
+        setMessage('Failed to load system data.')
+      } finally {
+        setPageLoading(false)
+      }
     }
+
+    fetchData()
   }, [activeCycle])
+
+  // Show skeleton loader while fetching initial data
+  if (pageLoading) {
+    return (
+      <div>
+        <div className="page-header">
+          <div className="h-7 bg-gray-200 rounded w-32 animate-pulse" />
+        </div>
+        <SkeletonTable rows={6} />
+      </div>
+    )
+  }
+
+  if (!activeCycle) {
+    return (
+      <div className="card text-center py-16">
+        <p className="text-5xl mb-4">📋</p>
+        <p className="text-gray-900 font-semibold mb-2">No active cycle</p>
+        <p className="text-gray-500 text-sm">Create a cycle first.</p>
+      </div>
+    )
+  }
 
   const hasPaid = (memberId) =>
     contributions.some(c =>
       c.memberId === memberId &&
       c.weekNumber === weekNumber &&
-      c.status === 'Paid'
+      (c.status === 'Paid' || c.status === 1) // Handles both string or enum definitions
     )
 
   const logContribution = async (memberId) => {
@@ -44,13 +69,14 @@ export default function ContributionLogger({ activeCycle, onContributionLogged }
     setMessage('')
     try {
       await api.post('/contributions', {
-        memberId, cycleId: activeCycle.id,
+        memberId, 
+        cycleId: activeCycle.id,
         amount: activeCycle.weeklyContributionAmount,
-        weekNumber, status: 'Paid',
-        recordedById: user.memberId,
+        weekNumber, 
+        status: 'Paid',
+        recordedById: user?.memberId,
       })
-      const { data } = await api.get(
-        `/contributions/cycle/${activeCycle.id}`)
+      const { data } = await api.get(`/contributions/cycle/${activeCycle.id}`)
       setContributions(data)
       setMessage('Contribution logged successfully.')
       onContributionLogged()
@@ -61,17 +87,8 @@ export default function ContributionLogger({ activeCycle, onContributionLogged }
     }
   }
 
-  if (!activeCycle) return (
-    <div className="card text-center py-16">
-      <p className="text-5xl mb-4">📋</p>
-      <p className="text-gray-900 font-semibold mb-2">No active cycle</p>
-      <p className="text-gray-500 text-sm">Create a cycle first.</p>
-    </div>
-  )
-
   const paidCount = members.filter(m => hasPaid(m.id)).length
-  const progressPct = members.length > 0
-    ? Math.round((paidCount / members.length) * 100) : 0
+  const progressPct = members.length > 0 ? Math.round((paidCount / members.length) * 100) : 0
 
   return (
     <div>
@@ -87,7 +104,7 @@ export default function ContributionLogger({ activeCycle, onContributionLogged }
           <label className="text-gray-600 text-sm font-medium">Week:</label>
           <input
             type="number" min="1" max="52" value={weekNumber}
-            onChange={e => setWeekNumber(parseInt(e.target.value))}
+            onChange={e => setWeekNumber(parseInt(e.target.value) || 1)}
             className="w-20 px-3 py-2 bg-white border border-gray-300
               rounded-lg text-gray-900 text-center text-sm focus:outline-none
               focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
@@ -147,14 +164,13 @@ export default function ContributionLogger({ activeCycle, onContributionLogged }
             {members.map(member => {
               const paid = hasPaid(member.id)
               return (
-                <tr key={member.id}
-                  className="hover:bg-gray-50 transition-colors">
+                <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                   <td className="table-cell">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-blue-100
                         text-blue-600 flex items-center justify-center
                         font-semibold text-sm flex-shrink-0">
-                        {member.fullName.charAt(0)}
+                        {member.fullName?.charAt(0) || '?'}
                       </div>
                       <span className="font-medium text-gray-900">
                         {member.fullName}
@@ -169,9 +185,7 @@ export default function ContributionLogger({ activeCycle, onContributionLogged }
                   </td>
                   <td className="table-cell">
                     <span className={`badge ${
-                      paid
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-600'
+                      paid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
                     }`}>
                       {paid ? 'Paid' : 'Unpaid'}
                     </span>
@@ -187,17 +201,12 @@ export default function ContributionLogger({ activeCycle, onContributionLogged }
                           : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
                         }`}
                     >
-                      {/*spinner inside button only */}
-                      {isSubmitting === member.id ? (
-                        <span className="flex items-center gap-1.5
-                          justify-center">
-                          <svg className="w-3 h-3 animate-spin"
-                            viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12"
-                              cy="12" r="10" stroke="currentColor"
-                              strokeWidth="4"/>
-                            <path className="opacity-75" fill="currentColor"
-                              d="M4 12a8 8 0 018-8v8H4z"/>
+                      {/* FIXED: Using 'submitting' variable to match hook name */}
+                      {submitting === member.id ? (
+                        <span className="flex items-center gap-1.5 justify-center">
+                          <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                           </svg>
                           Saving...
                         </span>
