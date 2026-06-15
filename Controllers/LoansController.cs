@@ -80,13 +80,15 @@ public async Task<ActionResult<Loan>> CreateLoan(CreateLoanDto dto)
     if (dto.Principal > cycle.MaxLoanAmount)
         return BadRequest($"Loan amount exceeds the cycle maximum of {cycle.MaxLoanAmount:C}.");
 
+    decimal feeRate = cycle.LoanFeePercentage / 100m;
+
     var loan = new Loan
     {
         MemberId = dto.MemberId,
         CycleId = dto.CycleId,
         Principal = dto.Principal,
-        FlatFee = Math.Round(dto.Principal * 0.10m, 2),
-        TotalRepayable = Math.Round(dto.Principal * 1.10m, 2),
+        FlatFee = Math.Round(dto.Principal * feeRate, 2),
+        TotalRepayable = Math.Round(dto.Principal * (1 + feeRate), 2),
         RepaymentWeeks = dto.RepaymentWeeks,
         Status = LoanStatus.Pending,
         RequestedAt = DateTime.UtcNow
@@ -111,12 +113,12 @@ public async Task<ActionResult<Loan>> CreateLoan(CreateLoanDto dto)
 
             // Guarantors are optional — if any exist, all must have approved
     // If none exist, executive can approve directly
-    if (loan.Guarantors.Any())
+           if (loan.Guarantors.Any())
     {
-        bool allApproved = loan.Guarantors
+            bool allApproved = loan.Guarantors
             .All(g => g.Status == GuarantorStatus.Approved);
 
-        if (!allApproved)
+           if (!allApproved)
             return BadRequest(
                 "All guarantors must approve before the loan can be approved.");
     }

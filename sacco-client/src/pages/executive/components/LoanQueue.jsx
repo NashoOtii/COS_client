@@ -14,6 +14,12 @@ export default function LoanQueue({ activeCycle, onLoanAction }) {
     memberId: '', principal: '', repaymentWeeks: '',
   })
 
+  // State for handling loan repayments
+  const [showRepayModal, setShowRepayModal] = useState(false)
+  const [repayForm, setRepayForm] = useState({
+    loanId: null, memberName: '', amount: '', remarks: ''
+  })
+
   useEffect(() => {
     fetchLoans()
     api.get('/members').then(({ data }) =>
@@ -72,6 +78,36 @@ export default function LoanQueue({ activeCycle, onLoanAction }) {
     } catch (err) {
       setMessage(err.response?.data || 'Failed to disburse loan.')
     }
+  }
+
+  // Triggered when clicking "Log Repayment"
+  const handleRepaySubmit = async (e) => {
+    e.preventDefault()
+    setMessage('')
+    try {
+      await api.post(`/loans/${repayForm.loanId}/repay`, {
+        amount: parseFloat(repayForm.amount),
+        recordedById: user.memberId,
+        remarks: repayForm.remarks || 'Executive Manual Entry'
+      })
+      setShowRepayModal(false)
+      setRepayForm({ loanId: null, memberName: '', amount: '', remarks: '' })
+      await fetchLoans()
+      setMessage('Repayment logged successfully.')
+      if (onLoanAction) onLoanAction()
+    } catch (err) {
+      setMessage(err.response?.data || 'Failed to log repayment.')
+    }
+  }
+
+  const openRepayModal = (loan) => {
+    setRepayForm({
+      loanId: loan.id,
+      memberName: loan.member?.fullName || `Member #${loan.memberId}`,
+      amount: '',
+      remarks: ''
+    })
+    setShowRepayModal(true)
   }
 
   const statusStyle = (status) => {
@@ -176,33 +212,35 @@ export default function LoanQueue({ activeCycle, onLoanAction }) {
             </div>
 
             {/* Fee preview */}
-            {requestForm.principal && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl
-                p-4 mb-4 flex flex-wrap gap-6 text-sm">
-                <div>
-                  <p className="text-blue-600 text-xs mb-0.5">Principal</p>
-                  <p className="font-bold text-blue-900">
-                    KES {parseFloat(requestForm.principal).toLocaleString()}
-                  </p>
+            {requestForm.principal && activeCycle && (() => {
+              const principalNum = parseFloat(requestForm.principal) || 0;
+              const feePercent = activeCycle.loanFeePercentage ?? 15;
+              const calculatedFee = principalNum * (feePercent / 100);
+              const totalRepayable = principalNum + calculatedFee;
+
+              return (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 flex flex-wrap gap-6 text-sm">
+                  <div>
+                    <p className="text-blue-600 text-xs mb-0.5">Principal</p>
+                    <p className="font-bold text-blue-900">
+                      KES {principalNum.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-blue-600 text-xs mb-0.5">Fee ({feePercent}%)</p>
+                    <p className="font-bold text-amber-700">
+                      KES {calculatedFee.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-blue-600 text-xs mb-0.5">Total Repayable</p>
+                    <p className="font-bold text-green-700">
+                      KES {totalRepayable.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-blue-600 text-xs mb-0.5">Fee (10%)</p>
-                  <p className="font-bold text-amber-700">
-                    KES {(parseFloat(requestForm.principal) * 0.1)
-                      .toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-blue-600 text-xs mb-0.5">
-                    Total Repayable
-                  </p>
-                  <p className="font-bold text-green-700">
-                    KES {(parseFloat(requestForm.principal) * 1.1)
-                      .toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             <button type="submit" className="btn-primary">
               Submit Request
@@ -285,14 +323,19 @@ export default function LoanQueue({ activeCycle, onLoanAction }) {
                           Disburse
                         </button>
                       )}
+                      {/* FIXED: Replaced passive tag with a working action button */}
                       {loan.status === 'Active' && (
-                        <span className="text-xs text-blue-600 font-medium">
-                          Active
-                        </span>
+                        <button onClick={() => openRepayModal(loan)}
+                          className="text-xs font-semibold px-3 py-1.5
+                            bg-amber-500 hover:bg-amber-600 text-white
+                            rounded-lg border-none cursor-pointer
+                            transition-colors">
+                          Repay
+                        </button>
                       )}
                       {loan.status === 'Repaid' && (
                         <span className="text-xs text-gray-400 font-medium">
-                          ✓ Repaid
+                          Repaid
                         </span>
                       )}
                     </div>
@@ -301,6 +344,56 @@ export default function LoanQueue({ activeCycle, onLoanAction }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Repayment Modal Popup */}
+      {showRepayModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Record Loan Repayment</h3>
+            <p className="text-sm text-gray-500 mb-4">Logging payment for <span className="font-semibold text-gray-800">{repayForm.memberName}</span></p>
+            
+            <form onSubmit={handleRepaySubmit}>
+              <div className="mb-4">
+                <label className="label">Amount Paid (KES)</label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  placeholder="e.g. 500"
+                  value={repayForm.amount}
+                  onChange={e => setRepayForm({ ...repayForm, amount: e.target.value })}
+                  className="input-field" 
+                  required 
+                />
+              </div>
+              <div className="mb-6">
+                <label className="label">Remarks / Reference</label>
+                <input 
+                  type="text" 
+                  placeholder="M-Pesa reference or comments"
+                  value={repayForm.remarks}
+                  onChange={e => setRepayForm({ ...repayForm, remarks: e.target.value })}
+                  className="input-field" 
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setShowRepayModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl border-none cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="px-4 py-2 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl border-none cursor-pointer transition-colors shadow-sm"
+                >
+                  Save Repayment
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

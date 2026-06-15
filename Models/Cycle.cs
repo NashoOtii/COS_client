@@ -15,6 +15,10 @@ namespace SaccoApi.Models
         public CycleStatus Status { get; set; } = CycleStatus.Active;
 
         [Required]
+        [Range(0, 100)]
+        public decimal LoanFeePercentage { get; set; } = 10.00m;
+
+        [Required]
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 
