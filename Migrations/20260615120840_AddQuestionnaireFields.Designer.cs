@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SaccoApi.Data;
@@ -11,9 +12,11 @@ using SaccoApi.Data;
 namespace SaccoApi.Migrations
 {
     [DbContext(typeof(SaccoDbContext))]
-    partial class SaccoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260615120840_AddQuestionnaireFields")]
+    partial class AddQuestionnaireFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -257,7 +260,7 @@ namespace SaccoApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cycles", (string)null);
+                    b.ToTable("Cycles");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.AuditLog", b =>
@@ -294,7 +297,7 @@ namespace SaccoApi.Migrations
 
                     b.HasIndex("PerformedById");
 
-                    b.ToTable("AuditLogs", (string)null);
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.Contribution", b =>
@@ -336,7 +339,7 @@ namespace SaccoApi.Migrations
                     b.HasIndex("MemberId", "CycleId", "WeekNumber")
                         .IsUnique();
 
-                    b.ToTable("Contributions", (string)null);
+                    b.ToTable("Contributions");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.CycleDividend", b =>
@@ -388,7 +391,7 @@ namespace SaccoApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("CycleDividends", (string)null);
+                    b.ToTable("CycleDividends");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.Investment", b =>
@@ -433,7 +436,7 @@ namespace SaccoApi.Migrations
 
                     b.HasIndex("CycleId");
 
-                    b.ToTable("Investments", (string)null);
+                    b.ToTable("Investments");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.Loan", b =>
@@ -488,7 +491,7 @@ namespace SaccoApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Loans", (string)null);
+                    b.ToTable("Loans");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.LoanGuarantor", b =>
@@ -518,7 +521,7 @@ namespace SaccoApi.Migrations
                     b.HasIndex("LoanId", "MemberId")
                         .IsUnique();
 
-                    b.ToTable("LoanGuarantors", (string)null);
+                    b.ToTable("LoanGuarantors");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.LoanRepayment", b =>
@@ -553,7 +556,7 @@ namespace SaccoApi.Migrations
 
                     b.HasIndex("RecordedById");
 
-                    b.ToTable("LoanRepayments", (string)null);
+                    b.ToTable("LoanRepayments");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.Member", b =>
@@ -615,7 +618,7 @@ namespace SaccoApi.Migrations
                     b.HasIndex("PhoneNumber")
                         .IsUnique();
 
-                    b.ToTable("Members", (string)null);
+                    b.ToTable("Members");
                 });
 
             modelBuilder.Entity("SaccoApi.Models.Penalty", b =>
@@ -658,7 +661,7 @@ namespace SaccoApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Penalties", (string)null);
+                    b.ToTable("Penalties");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

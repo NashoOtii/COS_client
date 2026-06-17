@@ -94,7 +94,13 @@ namespace SaccoApi.Controllers
                 Role = memberRole,
                 Status = MemberStatus.Inactive,//pends approval
                 DateJoined = DateTime.UtcNow,
-                ApplicationUserId = user.Id
+                ApplicationUserId = user.Id,
+
+                Motivation = dto.Motivation,
+                FinancialGoal = dto.FinancialGoal,
+                WeeklyCommitment = dto.WeeklyCommitment,
+                ValueAlignment = dto.ValueAlignment,
+                Contribution = dto.Contribution
             };
 
             _context.Members.Add(member);

@@ -5,7 +5,9 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ExecutiveDashboard from './pages/executive/ExecutiveDashboard'
 import MemberDashboard from './pages/member/MemberDashboard'
-import logoutIcon from './assets/icons8-logout-50.png'; // Keeping your unused import just in case
+import Landing from './pages/Landing'
+import Questionnaire from './pages/auth/Questionnaire'
+import logoutIcon from './assets/icons8-logout-50.png';
 
 // The interceptor component
 function RootRedirect() {
@@ -45,7 +47,9 @@ export default function App() {
           } />
 
           {/* Default redirect */}
-          <Route path="*" element={<RootRedirect />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/questionnaire" element={<Questionnaire />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

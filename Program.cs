@@ -21,9 +21,17 @@ builder.Services.AddControllers()
             System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
+// Fetch and validate connection string immediately to prevent vague driver errors
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException(
+        "CRITICAL: 'DefaultConnection' connection string is missing! " +
+        "Please check your appsettings.Development.json or environment variables.");
+}
+
 builder.Services.AddDbContext<SaccoDbContext>(options =>
-    options.UseNpgsql(builder.Configuration
-        .GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
@@ -64,14 +72,14 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("MemberOrAbove", policy =>
         policy.RequireRole("Member", "Treasurer", "Secretary", "Chairperson"));
 
+// local and production environments clearly defined
+var allowedOrigins = new[] { "https://sacco-client.onrender.com", "http://localhost:5173" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-            "https://sacco-client.onrender.com",
-            "http://localhost:5173"
-        )
+        policy.WithOrigins(allowedOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod()
         .WithMethods("GET", "POST", "PUT", "DELETE" , "PATCH");
@@ -94,10 +102,21 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// FORCE CORS TO LAYER ZERO
+// DYNAMIC CORS LAYER ZERO (Supports both local development and Render production)
 app.Use(async (context, next) =>
 {
-    context.Response.Headers["Access-Control-Allow-Origin"] = "https://sacco-client.onrender.com";
+    var origin = context.Request.Headers["Origin"].ToString();
+    
+    // Check if the incoming origin is allowed, default back to production if ambiguous
+    if (!string.IsNullOrEmpty(origin) && allowedOrigins.Contains(origin))
+    {
+        context.Response.Headers["Access-Control-Allow-Origin"] = origin;
+    }
+    else
+    {
+        context.Response.Headers["Access-Control-Allow-Origin"] = "https://sacco-client.onrender.com";
+    }
+
     context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
     context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS";
 
@@ -156,7 +175,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-//app.UseHttpsRedirection(); // Commented out to prevent proxy loops
 app.UseRouting();
 app.UseCors("AllowFrontend");     
 app.UseAuthentication();

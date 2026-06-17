@@ -24,6 +24,22 @@ namespace SaccoApi.Models
         public MemberStatus Status { get; set; } = MemberStatus.Active;
         public DateTime DateJoined { get; set; } = DateTime.UtcNow;
 
+        // Questionnaire Responses
+       [MaxLength(1000)]
+       public string? Motivation { get; set; }
+
+       [MaxLength(1000)]
+       public string? FinancialGoal { get; set; }
+
+       [MaxLength(200)]
+       public string? WeeklyCommitment { get; set; }
+
+       [MaxLength(200)]
+       public string? ValueAlignment { get; set; }
+
+       [MaxLength(1000)]
+       public string? Contribution { get; set; }
+
         public string? ApplicationUserId { get; set; }
 
         // Navigation
