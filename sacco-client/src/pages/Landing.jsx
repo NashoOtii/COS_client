@@ -68,9 +68,9 @@ export default function Landing() {
       <section className="bg-blue-900 py-12 px-6 shadow-inner">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { label: 'Members', value: '20+' },
+            { label: 'Members', value: '30+' },
             { label: 'Cycles Completed', value: '3' },
-            { label: 'Loans Issued', value: '50+' },
+            { label: 'Loans Issued', value: '60+' },
             { label: 'Founded', value: '2025' },
           ].map((stat, i) => (
             <div key={stat.label} className="group cursor-default hover:-translate-y-1 transition-transform duration-300">
