@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../../../api/axios'
-
+import api from '../../../api/axios';
 
 const OnboardingReview = () => {
   const [applications, setApplications] = useState([]);
@@ -10,11 +9,18 @@ const OnboardingReview = () => {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const response = await axios.get('/api/onboarding/applications');
+        setError('');
+        // FIX, Changed 'axios' to 'api' and removed the duplicate '/api' prefix
+        const response = await api.get('/onboarding/applications');
         setApplications(response.data);
       } catch (err) {
-        setError('Failed to fetch questionnaire submissions. Ensure you have Executive permissions.');
-        console.error(err);
+        // Handle empty database states gracefully
+        if (err.response?.status === 404) {
+          setApplications([]);
+        } else {
+          setError('Failed to fetch questionnaire submissions. Ensure you have Executive permissions.');
+          console.error(err);
+        }
       } finally {
         setLoading(false);
       }
@@ -32,7 +38,7 @@ const OnboardingReview = () => {
       <p className="text-sm text-gray-500 mb-6">Review newly submitted member registration details below.</p>
 
       {applications.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 border border-dashed rounded-lg">
+        <div className="text-center py-12 text-gray-500 border border-dashed border-gray-200 rounded-lg bg-gray-50/50">
           No onboarding questionnaires found.
         </div>
       ) : (
@@ -58,7 +64,7 @@ const OnboardingReview = () => {
                   </td>
                   <td className="py-3 px-4">
                     <button 
-                      className="px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-all"
+                      className="px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-all cursor-pointer"
                       onClick={() => alert(`Reviewing details for ID: ${app.id}`)}
                     >
                       View Full Answers
