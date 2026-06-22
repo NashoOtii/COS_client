@@ -120,5 +120,50 @@ public async Task<IActionResult> ResetPassword(int id, [FromQuery] string newPas
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        // DELETE: api/members/5
+        [HttpDelete("{id}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Policy = "ExecutiveOnly")] // Protects the route
+        public async Task<IActionResult> DeleteMember(int id)
+        {
+            var member = await _context.Members.FindAsync(id);
+            if (member == null) return NotFound();
+
+            // Use a transaction to guarantee both records are deleted or neither is
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Find and delete the linked Identity/Auth login credentials if they exist
+                if (!string.IsNullOrEmpty(member.ApplicationUserId))
+                {
+                    var user = await _userManager.FindByIdAsync(member.ApplicationUserId);
+                    if (user != null)
+                    {
+                        var userResult = await _userManager.DeleteAsync(user);
+                        if (!userResult.Succeeded)
+                        {
+                            return BadRequest(userResult.Errors.Select(e => e.Description));
+                        }
+                    }
+                }
+
+                // 2. Delete the member's profile record
+                _context.Members.Remove(member);
+                await _context.SaveChangesAsync();
+
+                // Commit the changes to the database
+                await transaction.CommitAsync();
+                return NoContent();
+            }
+            catch (DbUpdateException)
+            {
+                // Catches Foreign Key constraints if the member has logged contributions, loans, or penalties
+                return BadRequest("Cannot delete this member because they have associated system records (Contributions, Loans, or Audit Logs). Please deactivate their profile instead.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An unexpected internal error occurred: {ex.Message}");
+            }
+        }
     }
 }
