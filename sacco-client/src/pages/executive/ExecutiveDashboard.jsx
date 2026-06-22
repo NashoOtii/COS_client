@@ -9,9 +9,11 @@ import LoanQueue from './components/LoanQueue'
 import InvestmentTracker from './components/InvestmentTracker'
 import HallOfFame from '../HallOfFame'
 import Constitution from '../Constitution'
+import OnboardingReview from './components/OnboardingReview'
 
 const tabs = [
   { id: 'overview', label: 'Overview' },
+  { id: 'onboarding', label: 'Onboarding' },
   { id: 'members', label: 'Members' },
   { id: 'contributions',  label: 'Contributions' },
   { id: 'loans', label: 'Loans' },
@@ -104,6 +106,7 @@ export default function ExecutiveDashboard() {
         <InvestmentTracker activeCycle={activeCycle} />
       )}
       {activeTab === 'halloffame' && <HallOfFame />}
+      {activeTab === 'onboarding' && <OnboardingReview />}
       {activeTab === 'constitution' && <Constitution />}
     </DashboardLayout>
   )

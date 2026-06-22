@@ -8,7 +8,7 @@ export default function MemberList() {
   const [search, setSearch] = useState('')
   const [pending, setPending] = useState([])
 
-  // 1. Centralized fetch function for both initial load and refetching after actions
+  // 1. Centralized fetch function
   const fetchData = useCallback(async () => {
     try {
       const [allResponse, pendResponse] = await Promise.all([
@@ -30,24 +30,22 @@ export default function MemberList() {
     fetchData()
   }, [fetchData])
 
-  // 4. toggleStatus
+  // 3. toggleStatus (Deactivate)
   const toggleStatus = async (member) => {
     try {
       const newStatusValue = member.status === 'Active' ? 1 : 0
       await api.patch(`/members/${member.id}/status`, newStatusValue, {
         headers: { 'Content-Type': 'application/json' }
       })
-      setMembers(members.map(m =>
-        m.id === member.id
-          ? { ...m, status: member.status === 'Active' ? 'Inactive' : 'Active' }
-          : m
-      ))
+      
+      // Remove from active view dynamically
+      setMembers(members.filter(m => m.id !== member.id))
     } catch (error) {
       console.error("Error toggling status:", error)
     }
   }
 
-  // reset password
+  // 4. reset password
   const handleResetPassword = async (member) => {
     const newPassword = prompt(`Enter new temporary password for ${member.fullName}:`)
     if (!newPassword || newPassword.trim() === '') return
@@ -61,6 +59,26 @@ export default function MemberList() {
     } catch (error) {
       const msg = error.response?.data
       alert(`Error: ${Array.isArray(msg) ? msg.join(' ') : msg || 'Reset failed.'}`)
+    }
+  }
+
+  // 5. Delete member (Handles both active and pending states)
+  const handleDelete = async (member) => {
+    const confirmDelete = window.confirm(`Are you sure you want to permanently delete ${member.fullName}? This action cannot be undone.`);
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(`/members/${member.id}`);
+      
+      // Clear out of whichever list they were sitting in
+      setMembers(members.filter(m => m.id !== member.id));
+      setPending(pending.filter(m => m.id !== member.id));
+      
+      alert(`${member.fullName} has been successfully deleted.`);
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      const msg = error.response?.data;
+      alert(`Error: ${Array.isArray(msg) ? msg.join(' ') : msg || 'Failed to delete member.'}`);
     }
   }
 
@@ -123,9 +141,7 @@ export default function MemberList() {
             </h3>
           </div>
           <div className="card p-0 overflow-hidden border-amber-200">
-            {/* Added scroll wrapper */}
             <div className="w-full overflow-x-auto">
-              {/* Added min-width to maintain clean desktop spacing on mobile viewports */}
               <table className="w-full min-w-[750px]">
                 <thead>
                   <tr className="border-b border-amber-100 bg-amber-50">
@@ -169,15 +185,10 @@ export default function MemberList() {
                             Approve
                           </button>
                           <button
-                            onClick={async () => {
-                              await api.patch(`/members/${member.id}/status`, 1, {
-                                headers: { 'Content-Type': 'application/json' }
-                              })
-                              setPending(pending.filter(m => m.id !== member.id))
-                            }}
+                            onClick={() => handleDelete(member)}
                             className="text-xs font-semibold px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg border-none cursor-pointer transition-colors"
                           >
-                            Reject
+                            Reject & Delete
                           </button>
                         </div>
                       </td>
@@ -202,9 +213,7 @@ export default function MemberList() {
       </div>
 
       <div className="card p-0 overflow-hidden">
-        {/* Added scroll wrapper */}
         <div className="w-full overflow-x-auto">
-          {/* Added min-width to ensure columns don't break layout lines */}
           <table className="w-full min-w-[850px]">
             <thead>
               <tr className="border-b border-gray-200">
@@ -238,12 +247,8 @@ export default function MemberList() {
                     </span>
                   </td>
                   <td className="table-cell">
-                    <span className={`badge ${
-                      member.status === 'Active'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-600'
-                    }`}>
-                      {member.status === 'Active' ? '● Active' : '● Inactive'}
+                    <span className={`badge bg-green-100 text-green-700`}>
+                      ● Active
                     </span>
                   </td>
                   <td className="table-cell text-gray-500 text-xs">
@@ -253,19 +258,21 @@ export default function MemberList() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => toggleStatus(member)}
-                        className={`text-xs font-medium px-3 py-1.5 rounded-lg border-none cursor-pointer transition-colors ${
-                          member.status === 'Active'
-                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                            : 'bg-green-50 text-green-600 hover:bg-green-100'
-                        }`}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg border-none cursor-pointer transition-colors bg-red-50 text-red-600 hover:bg-red-100"
                       >
-                        {member.status === 'Active' ? 'Deactivate' : 'Activate'}
+                        Deactivate
                       </button>
                       <button
                         onClick={() => handleResetPassword(member)}
                         className="text-xs font-medium px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg border-none cursor-pointer transition-colors"
                       >
                         Reset Pass
+                      </button>
+                      <button
+                        onClick={() => handleDelete(member)}
+                        className="text-xs font-medium px-3 py-1.5 bg-red-600 text-white hover:bg-red-700 rounded-lg border-none cursor-pointer transition-colors"
+                      >
+                        Delete
                       </button>
                     </div>
                   </td>
