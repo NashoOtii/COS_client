@@ -40,6 +40,19 @@ export default function CycleOverview({ activeCycle, summary, onCycleCreated }) 
   }
 }
 
+  const handleCloseCycle = async () => {
+    if (!window.confirm("Are you sure you want to close the current cycle?")) return
+
+    try {
+      await api.patch(`/cycles/${activeCycle.id}/close`)
+      alert("Cycle closed successfully.")
+      onCycleCreated()
+    } catch (err) {
+      const errorMessage = err.response?.data || "Failed to close cycle. Please try again."
+      alert(errorMessage)
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -162,33 +175,38 @@ export default function CycleOverview({ activeCycle, summary, onCycleCreated }) 
   ))}
 
       {activeCycle && !summary && (
-  <div className="text-gray-400 text-sm py-4">
-    Loading summary...
-  </div>
-)}
+        <div className="text-gray-400 text-sm py-4">
+          Loading summary...
+        </div>
+      )}
+        </div>
 
-</div>
-
-          {/* Cycle settings */}
-          <div className="card">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-              Cycle Settings
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: 'Cycle Name', value: activeCycle?.name },
-                { label: 'Weekly Contribution', value: `KES ${activeCycle?.weeklyContributionAmount?.toLocaleString()}` },
-                { label: 'Max Loan Amount', value: `KES ${activeCycle?.maxLoanAmount?.toLocaleString()}` },
-                { label: 'Started', value: activeCycle ? new Date(activeCycle.startDate).toLocaleDateString() : '—' },
-              ].map(item => (
-                <div key={item.label} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <p className="text-xs text-gray-500 mb-1">{item.label}</p>
-                  <p className="text-sm font-semibold text-gray-900">{item.value}</p>
-                </div>
-              ))}
+        {/* Cycle settings */}
+        <div className="card">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            Cycle Settings
+          </h3>
+          <button 
+            onClick={handleCloseCycle}
+            className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+          >
+            Close Cycle
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'Cycle Name', value: activeCycle?.name },
+            { label: 'Weekly Contribution', value: `KES ${activeCycle?.weeklyContributionAmount?.toLocaleString()}` },
+            { label: 'Max Loan Amount', value: `KES ${activeCycle?.maxLoanAmount?.toLocaleString()}` },
+            { label: 'Started', value: activeCycle ? new Date(activeCycle.startDate).toLocaleDateString() : '—' },
+          ].map(item => (
+            <div key={item.label} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+              <p className="text-sm font-semibold text-gray-900">{item.value}</p>
             </div>
-          </div>
-        </>
+          ))}
+        </div>
+      </>
       )}
     </div>
   )

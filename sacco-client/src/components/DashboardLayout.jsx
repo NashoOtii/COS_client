@@ -96,7 +96,7 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all border-none bg-transparent cursor-pointer"
               >
                 <img 
-                  src="/icons8-logout-50.png" 
+                  src={logoutIcon}
                   alt="Logout" 
                   className="w-5 h-5 object-contain brightness-0 invert opacity-60" 
                 />
@@ -204,7 +204,7 @@ export default function DashboardLayout({ tabs, activeTab, onTabChange,
               ${!sidebarOpen ? 'justify-center' : ''}`}
           >
             <img 
-              src="/icons8-logout-50.png" 
+              src={logoutIcon} 
               alt="Logout" 
               className="w-5 h-5 object-contain brightness-0 invert opacity-60" />
             {sidebarOpen && <span>Logout</span>}

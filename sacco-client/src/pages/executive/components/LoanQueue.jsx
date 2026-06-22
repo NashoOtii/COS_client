@@ -259,8 +259,9 @@ export default function LoanQueue({ activeCycle, onLoanAction }) {
           </p>
         </div>
       ) : (
-        <div className="card p-0 overflow-hidden">
-          <table className="w-full">
+        <div className="w-full overflow-x-auto">
+          {/* Added min-width to maintain clean desktop spacing on mobile viewports */}
+          <table className="w-full min-w-[750px]">
             <thead>
               <tr className="border-b border-gray-200">
                 {['Member', 'Principal', 'Fee', 'Total',
