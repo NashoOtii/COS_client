@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from '../api/axios';
+import api from '../../../api/axios'
+
 
 const OnboardingReview = () => {
   const [applications, setApplications] = useState([]);
